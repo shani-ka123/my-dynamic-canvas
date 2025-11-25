@@ -1,1 +1,299 @@
+import React, { useState } from 'react';
+import { 
+  Cpu, 
+  Layers, 
+  Zap, 
+  Sparkles, 
+  Info, 
+  Globe, 
+  Heart, 
+  Timer, 
+  Users,
+  Search,
+  Bot
+} from 'lucide-react';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
+const VoiceTechMatrix = () => {
+  const [activeCompany, setActiveCompany] = useState<string | null>(null);
+  
+  // Simulation State
+  const [simInput, setSimInput] = useState('');
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [simulatedNode, setSimulatedNode] = useState<{x: number, y: number, rationale: string} | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const companies = [
+    {
+      id: 'cartesia',
+      name: 'Cartesia',
+      icon: <Zap size={24} />,
+      x: 20, // Left (Speed)
+      y: 80, // Bottom (Core Tech)
+      color: 'bg-emerald-100 text-emerald-700 border-emerald-300',
+      description: 'Core Technology: Speed & Efficiency',
+      details: 'Differentiates via SSM architecture optimized for real-time dialogue and low latency.'
+    },
+    {
+      id: 'elevenlabs',
+      name: 'ElevenLabs',
+      icon: <Globe size={24} />,
+      x: 80, // Right (Realism)
+      y: 80, // Bottom (Core Tech)
+      color: 'bg-blue-100 text-blue-700 border-blue-300',
+      description: 'Core Technology: Realism & Scale',
+      details: 'Market leader in voice realism, fidelity, and multilingual capabilities.'
+    },
+    {
+      id: 'hume',
+      name: 'Hume.ai',
+      icon: <Heart size={24} />,
+      x: 70, // Right (Realism/Emotion)
+      y: 65, // Bottom-ish (Niche Core Tech)
+      color: 'bg-rose-100 text-rose-700 border-rose-300',
+      description: 'Core Technology: Emotional Intelligence',
+      details: 'Focuses on EQ, tonality, and responding appropriately to human emotion.'
+    },
+    {
+      id: 'adaptglobal',
+      name: 'AdaptGlobal',
+      icon: <Users size={24} />,
+      x: 80, // Right (Uses Realism Tech)
+      y: 20, // Top (Service/Solution)
+      color: 'bg-indigo-100 text-indigo-700 border-indigo-300',
+      description: 'Service Aggregator: Media Localization',
+      details: 'Not a core researcher. Combines foundational models (like ElevenLabs) with human oversight for industry solutions.'
+    }
+  ];
+
+  // Gemini API Handler
+  const handleSimulation = async () => {
+    if (!simInput.trim()) return;
+    
+    setIsSimulating(true);
+    setErrorMsg(null);
+    setSimulatedNode(null);
+
+    try {
+      const apiKey = ""; // Runtime environment provides this
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ 
+        model: "gemini-2.5-flash-preview-09-2025",
+        generationConfig: {
+            responseMimeType: "application/json"
+        }
+      });
+
+      const prompt = `
+        You are a Voice Tech Market Analyst. 
+        I have a 2x2 matrix graph with these axes:
+        - X-Axis (0 to 100): 0 = Pure Speed/Latency Focus, 100 = Pure Realism/Richness Focus.
+        - Y-Axis (0 to 100): 0 = Integrated Service/Solution (Human-in-loop/Aggregator), 100 = Core Research/Foundation Model.
+        
+        Reference Points:
+        - ElevenLabs is at X:80, Y:80 (High Realism, Core Tech).
+        - Cartesia is at X:20, Y:80 (High Speed, Core Tech).
+        - AdaptGlobal is at X:80, Y:20 (High Realism Tech Usage, Service Layer).
+
+        Analyze this new company description: "${simInput}"
+
+        Return a JSON object with:
+        - "x": integer (0-100) estimated position.
+        - "y": integer (0-100) estimated position.
+        - "rationale": A short, punchy sentence explaining why you placed it there.
+      `;
+
+      const result = await model.generateContent(prompt);
+      const response = JSON.parse(result.response.text());
+      
+      setSimulatedNode(response);
+    } catch (err) {
+      console.error("Gemini API Error:", err);
+      setErrorMsg("Failed to analyze. Please try again.");
+    } finally {
+      setIsSimulating(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-700 flex flex-col items-center">
+      
+      {/* Header */}
+      <div className="text-center mb-8 max-w-3xl">
+        <h1 className="text-2xl md:text-3xl font-bold text-slate-800 mb-2">Voice AI Market Positioning</h1>
+        <p className="text-slate-500">
+          Mapping the landscape by Technical Focus vs. Business Model
+        </p>
+      </div>
+
+      {/* Graph Container */}
+      <div className="relative w-full max-w-4xl aspect-[4/3] md:aspect-[16/9] bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+        
+        {/* Background Grid */}
+        <div className="absolute inset-0 grid grid-cols-2 grid-rows-2">
+          {/* Top Left */}
+          <div className="border-r border-b border-slate-100 bg-slate-50/30 p-4 flex flex-col items-start justify-start">
+             <span className="text-[10px] font-bold tracking-widest text-slate-300 uppercase">Service + Speed</span>
+          </div>
+          {/* Top Right */}
+          <div className="border-b border-slate-100 bg-slate-50/50 p-4 flex flex-col items-end justify-start">
+             <span className="text-[10px] font-bold tracking-widest text-slate-300 uppercase">Service + Fidelity</span>
+          </div>
+          {/* Bottom Left */}
+          <div className="border-r border-slate-100 bg-slate-50/50 p-4 flex flex-col items-start justify-end">
+             <span className="text-[10px] font-bold tracking-widest text-slate-300 uppercase">Core Tech + Speed</span>
+          </div>
+          {/* Bottom Right */}
+          <div className="bg-slate-50/30 p-4 flex flex-col items-end justify-end">
+             <span className="text-[10px] font-bold tracking-widest text-slate-300 uppercase">Core Tech + Fidelity</span>
+          </div>
+        </div>
+
+        {/* Axes Lines */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-full h-px bg-slate-300 relative">
+            {/* X-Axis Labels */}
+            <div className="absolute left-4 -top-8 flex items-center gap-2 text-slate-400 font-semibold text-xs bg-white/80 px-2 py-1 rounded">
+              <Timer size={14} /> Latency / Speed Focus
+            </div>
+            <div className="absolute right-4 -top-8 flex items-center gap-2 text-slate-400 font-semibold text-xs bg-white/80 px-2 py-1 rounded">
+              <Sparkles size={14} /> Realism / Emotion Focus
+            </div>
+          </div>
+          <div className="h-full w-px bg-slate-300 absolute left-1/2">
+             {/* Y-Axis Labels */}
+             <div className="absolute -left-[6.5rem] top-4 flex items-center gap-2 text-slate-400 font-semibold text-xs bg-white/80 px-2 py-1 rounded">
+              <Layers size={14} /> Integrated Service / Solution
+            </div>
+            <div className="absolute -left-[6rem] bottom-4 flex items-center gap-2 text-slate-400 font-semibold text-xs bg-white/80 px-2 py-1 rounded">
+              <Cpu size={14} /> Core Technology / Research
+            </div>
+          </div>
+        </div>
+
+        {/* Plotting Existing Companies */}
+        {companies.map((company) => (
+          <div
+            key={company.id}
+            className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 cursor-pointer group z-10`}
+            style={{ left: `${company.x}%`, top: `${company.y}%` }}
+            onMouseEnter={() => setActiveCompany(company.id)}
+            onMouseLeave={() => setActiveCompany(null)}
+          >
+            {/* Node Circle */}
+            <div className={`
+              w-16 h-16 rounded-full flex items-center justify-center shadow-md border-2 
+              ${company.color} transition-transform duration-300 
+              ${activeCompany === company.id ? 'scale-110 ring-4 ring-offset-2 ring-slate-200' : 'hover:scale-105'}
+            `}>
+              {company.icon}
+            </div>
+
+            {/* Label */}
+            <div className={`
+              mt-2 text-center text-sm font-bold bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full border border-slate-200 shadow-sm
+              ${activeCompany === company.id ? 'text-slate-900' : 'text-slate-600'}
+            `}>
+              {company.name}
+            </div>
+
+            {/* Tooltip Card - Contextual */}
+            <div className={`
+              absolute top-0 left-full ml-4 w-64 bg-white p-4 rounded-xl shadow-xl border border-slate-100 z-20
+              transition-all duration-200 origin-left
+              ${activeCompany === company.id ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none hidden md:block'}
+            `}>
+              <h3 className="font-bold text-slate-800 mb-1 flex items-center gap-2">
+                {company.name}
+                <Info size={14} className="text-slate-400" />
+              </h3>
+              <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">
+                {company.description}
+              </p>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                {company.details}
+              </p>
+            </div>
+          </div>
+        ))}
+
+        {/* Simulated Gemini Node */}
+        {simulatedNode && (
+          <div
+            className="absolute transform -translate-x-1/2 -translate-y-1/2 z-20 animate-bounce-in"
+            style={{ left: `${simulatedNode.x}%`, top: `${simulatedNode.y}%` }}
+          >
+             <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-xl border-4 border-white bg-purple-600 text-white ring-4 ring-purple-200">
+               <Bot size={28} />
+             </div>
+             <div className="mt-2 text-center w-40 absolute left-1/2 -translate-x-1/2">
+                <div className="bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded-full mb-1">AI Prediction</div>
+                <div className="bg-white/95 backdrop-blur-sm p-2 rounded-lg text-xs border border-purple-200 shadow-lg text-slate-800 font-medium">
+                  {simulatedNode.rationale}
+                </div>
+             </div>
+          </div>
+        )}
+      </div>
+
+      {/* AI Simulation Controls */}
+      <div className="w-full max-w-4xl mt-8 bg-white rounded-xl shadow-sm border border-purple-100 p-6">
+        <div className="flex items-center gap-3 mb-4">
+           <div className="bg-purple-100 p-2 rounded-lg">
+             <Sparkles className="text-purple-600" size={20} />
+           </div>
+           <div>
+             <h3 className="text-lg font-bold text-slate-800">Where do you fit?</h3>
+             <p className="text-sm text-slate-500">Describe a company to see where Gemini AI places it on the graph.</p>
+           </div>
+        </div>
+        
+        <div className="flex flex-col md:flex-row gap-4">
+          <input 
+            type="text" 
+            value={simInput}
+            onChange={(e) => setSimInput(e.target.value)}
+            placeholder="e.g., 'An app that instantly translates zoom calls into robotic voices for privacy.'"
+            className="flex-1 border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all"
+            onKeyDown={(e) => e.key === 'Enter' && handleSimulation()}
+          />
+          <button 
+            onClick={handleSimulation}
+            disabled={isSimulating || !simInput.trim()}
+            className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap"
+          >
+            {isSimulating ? (
+              <>Analyzing...</>
+            ) : (
+              <>✨ Simulate Position</>
+            )}
+          </button>
+        </div>
+        {errorMsg && <p className="text-red-500 text-sm mt-2">{errorMsg}</p>}
+      </div>
+
+      {/* Legend / Methodology */}
+      <div className="mt-8 max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-slate-500">
+        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+          <strong className="text-slate-800 block mb-2 flex items-center gap-2">
+            <Cpu size={16} /> Vertical Axis: Business Model
+          </strong>
+          <p>
+            Distinguishes between companies building <span className="font-semibold text-slate-700">Foundation Models</span> (bottom) versus those offering <span className="font-semibold text-slate-700">Managed Solutions</span> (top). AdaptGlobal sits at the top as it aggregates tech like ElevenLabs to solve specific industry problems.
+          </p>
+        </div>
+        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+          <strong className="text-slate-800 block mb-2 flex items-center gap-2">
+            <Timer size={16} /> Horizontal Axis: Primary Focus
+          </strong>
+          <p>
+            The trade-off between <span className="font-semibold text-slate-700">Speed/Latency</span> (left) and <span className="font-semibold text-slate-700">Richness/Realism</span> (right). Cartesia prioritizes speed (SSM), while ElevenLabs and Hume prioritize audio fidelity and emotional nuance.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  );
+};
+
+export default VoiceTechMatrix;
